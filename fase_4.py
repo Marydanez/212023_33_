@@ -1,40 +1,32 @@
-# ============================================
-# PROYECTO: SOFTWARE FJ
-# Sistema de Gestión de Clientes, Servicios y Reservas
-# Programación Orientada a Objetos + Manejo Avanzado de Excepciones
-# ============================================
-
 from abc import ABC, abstractmethod
 from datetime import datetime
 
 
-# =========================================================
+# =====================================================
 # LOGGER
-# =========================================================
+# =====================================================
 
 class Logger:
-
-    ARCHIVO_LOG = "logs.txt"
 
     @staticmethod
     def registrar(mensaje):
 
-        with open(Logger.ARCHIVO_LOG, "a", encoding="utf-8") as archivo:
+        with open("logs.txt", "a", encoding="utf-8") as archivo:
 
             archivo.write(
                 f"{datetime.now()} -> {mensaje}\n"
             )
 
 
-# =========================================================
-# EXCEPCIONES PERSONALIZADAS
-# =========================================================
+# =====================================================
+# EXCEPCIONES
+# =====================================================
 
 class ClienteInvalidoError(Exception):
     pass
 
 
-class ServicioNoDisponibleError(Exception):
+class ServicioError(Exception):
     pass
 
 
@@ -42,9 +34,9 @@ class ReservaError(Exception):
     pass
 
 
-# =========================================================
-# CLASE ABSTRACTA GENERAL
-# =========================================================
+# =====================================================
+# CLASE ABSTRACTA
+# =====================================================
 
 class Entidad(ABC):
 
@@ -53,10 +45,9 @@ class Entidad(ABC):
         pass
 
 
-# =========================================================
-# CLASE CLIENTE
-# Encapsulación + Validaciones
-# =========================================================
+# =====================================================
+# CLIENTE
+# =====================================================
 
 class Cliente(Entidad):
 
@@ -66,83 +57,47 @@ class Cliente(Entidad):
         self.__correo = correo
         self.__telefono = telefono
 
-        self.validar_datos()
+        self.validar()
 
-    # ==========================
-    # VALIDACIONES
-    # ==========================
-
-    def validar_datos(self):
+    def validar(self):
 
         if not self.__nombre.strip():
             raise ClienteInvalidoError(
-                "El nombre del cliente está vacío"
+                "Nombre vacío"
             )
 
         if "@" not in self.__correo:
             raise ClienteInvalidoError(
-                "Correo electrónico inválido"
+                "Correo inválido"
             )
 
         if len(self.__telefono) < 7:
             raise ClienteInvalidoError(
-                "Número telefónico inválido"
+                "Teléfono inválido"
             )
-
-    # ==========================
-    # GETTERS
-    # ==========================
 
     def get_nombre(self):
         return self.__nombre
 
-    def get_correo(self):
-        return self.__correo
-
-    def get_telefono(self):
-        return self.__telefono
-
-    # ==========================
-    # SETTERS
-    # ==========================
-
-    def set_telefono(self, nuevo_telefono):
-
-        if len(nuevo_telefono) < 7:
-            raise ClienteInvalidoError(
-                "El nuevo teléfono es inválido"
-            )
-
-        self.__telefono = nuevo_telefono
-
-    # ==========================
-    # MÉTODO ABSTRACTO
-    # ==========================
-
     def mostrar_info(self):
 
         return (
-            f"Cliente: {self.__nombre} | "
-            f"Correo: {self.__correo} | "
-            f"Teléfono: {self.__telefono}"
+            f"{self.__nombre} | "
+            f"{self.__correo} | "
+            f"{self.__telefono}"
         )
 
 
-# =========================================================
-# CLASE ABSTRACTA SERVICIO
-# Abstracción + Polimorfismo
-# =========================================================
+# =====================================================
+# SERVICIO ABSTRACTO
+# =====================================================
 
-class Servicio(Entidad, ABC):
+class Servicio(ABC):
 
-    def __init__(self, nombre, precio_base):
+    def __init__(self, nombre, precio):
 
         self.nombre = nombre
-        self.precio_base = precio_base
-
-    # ==========================
-    # MÉTODOS ABSTRACTOS
-    # ==========================
+        self.precio = precio
 
     @abstractmethod
     def calcular_costo(self):
@@ -152,422 +107,332 @@ class Servicio(Entidad, ABC):
     def descripcion(self):
         pass
 
-    @abstractmethod
-    def validar_parametros(self):
-        pass
 
-    # ==========================
-    # SOBRECARGA SIMULADA
-    # ==========================
-
-    def calcular_costo_con_extra(
-        self,
-        impuesto=0,
-        descuento=0
-    ):
-
-        total = self.calcular_costo()
-
-        total += total * impuesto
-
-        total -= descuento
-
-        return total
-
-
-# =========================================================
-# SERVICIO 1: RESERVA DE SALAS
-# =========================================================
+# =====================================================
+# SERVICIOS
+# =====================================================
 
 class ReservaSala(Servicio):
 
     def __init__(self, horas):
 
         super().__init__(
-            "Reserva de Sala",
+            "Reserva Sala",
             50
         )
 
         self.horas = horas
 
-        self.validar_parametros()
-
-    def validar_parametros(self):
-
-        if self.horas <= 0:
-            raise ServicioNoDisponibleError(
-                "Las horas deben ser mayores a 0"
-            )
-
     def calcular_costo(self):
 
-        return self.precio_base * self.horas
+        return self.precio * self.horas
 
     def descripcion(self):
 
         return (
-            f"Reserva de sala por "
+            f"Sala reservada "
             f"{self.horas} horas"
         )
 
-    def mostrar_info(self):
-
-        return self.descripcion()
-
-
-# =========================================================
-# SERVICIO 2: ALQUILER DE EQUIPOS
-# =========================================================
 
 class AlquilerEquipo(Servicio):
 
     def __init__(self, dias):
 
         super().__init__(
-            "Alquiler de Equipos",
+            "Alquiler Equipo",
             35
         )
 
         self.dias = dias
 
-        self.validar_parametros()
-
-    def validar_parametros(self):
-
-        if self.dias <= 0:
-            raise ServicioNoDisponibleError(
-                "Los días deben ser mayores a 0"
-            )
-
     def calcular_costo(self):
 
-        return self.precio_base * self.dias
+        return self.precio * self.dias
 
     def descripcion(self):
 
         return (
-            f"Alquiler de equipo por "
+            f"Equipo alquilado "
             f"{self.dias} días"
         )
 
-    def mostrar_info(self):
-
-        return self.descripcion()
-
-
-# =========================================================
-# SERVICIO 3: ASESORÍAS ESPECIALIZADAS
-# =========================================================
 
 class AsesoriaEspecializada(Servicio):
 
     def __init__(self, sesiones):
 
         super().__init__(
-            "Asesoría Especializada",
+            "Asesoría",
             120
         )
 
         self.sesiones = sesiones
 
-        self.validar_parametros()
-
-    def validar_parametros(self):
-
-        if self.sesiones <= 0:
-            raise ServicioNoDisponibleError(
-                "Las sesiones deben ser mayores a 0"
-            )
-
     def calcular_costo(self):
 
-        return self.precio_base * self.sesiones
+        return self.precio * self.sesiones
 
     def descripcion(self):
 
         return (
-            f"Asesoría especializada de "
+            f"Asesoría de "
             f"{self.sesiones} sesiones"
         )
 
-    def mostrar_info(self):
 
-        return self.descripcion()
-
-
-# =========================================================
-# CLASE RESERVA
-# =========================================================
+# =====================================================
+# RESERVA
+# =====================================================
 
 class Reserva:
 
     def __init__(
         self,
         cliente,
-        servicio,
-        duracion
+        servicio
     ):
 
         self.cliente = cliente
         self.servicio = servicio
-        self.duracion = duracion
         self.estado = "Pendiente"
-
-    # =====================================================
-    # CONFIRMAR RESERVA
-    # try / except / else / finally
-    # =====================================================
 
     def confirmar(self):
 
         try:
 
-            if self.duracion <= 0:
-
-                raise ReservaError(
-                    "La duración debe ser mayor a 0"
-                )
-
             costo = self.servicio.calcular_costo()
 
-        except Exception as error:
+        except Exception as e:
 
             self.estado = "Fallida"
 
-            Logger.registrar(
-                f"ERROR EN RESERVA: {error}"
-            )
+            Logger.registrar(str(e))
 
-            # Encadenamiento de excepciones
             raise ReservaError(
-                "No fue posible confirmar la reserva"
-            ) from error
+                "No se pudo confirmar"
+            ) from e
 
         else:
 
             self.estado = "Confirmada"
-
-            Logger.registrar(
-                f"Reserva confirmada para "
-                f"{self.cliente.get_nombre()}"
-            )
 
             return costo
 
         finally:
 
             Logger.registrar(
-                "Proceso de reserva finalizado"
+                "Proceso finalizado"
             )
-
-    # =====================================================
-    # CANCELAR RESERVA
-    # =====================================================
-
-    def cancelar(self):
-
-        self.estado = "Cancelada"
-
-        Logger.registrar(
-            f"Reserva cancelada para "
-            f"{self.cliente.get_nombre()}"
-        )
-
-    # =====================================================
-    # MOSTRAR INFORMACIÓN
-    # =====================================================
 
     def mostrar_info(self):
 
         return (
-            f"Cliente: {self.cliente.get_nombre()} | "
-            f"Servicio: {self.servicio.nombre} | "
-            f"Estado: {self.estado}"
+            f"Cliente: "
+            f"{self.cliente.get_nombre()} | "
+            f"Servicio: "
+            f"{self.servicio.nombre} | "
+            f"Estado: "
+            f"{self.estado}"
         )
 
 
-# =========================================================
-# SISTEMA PRINCIPAL
-# =========================================================
+# =====================================================
+# LISTAS
+# =====================================================
 
 clientes = []
 reservas = []
 
-print("\n===================================")
-print("SISTEMA SOFTWARE FJ")
-print("===================================\n")
 
+# =====================================================
+# MENÚ PRINCIPAL
+# =====================================================
 
-# =========================================================
-# OPERACIONES DEL SISTEMA
-# =========================================================
+while True:
 
-operaciones = [
+    print("\n========== SOFTWARE FJ ==========")
+    print("1. Registrar cliente")
+    print("2. Crear reserva")
+    print("3. Ver clientes")
+    print("4. Ver reservas")
+    print("5. Salir")
 
-    # CLIENTES VÁLIDOS
-    ("cliente", "Juan Pérez", "juan@gmail.com", "1234567"),
-    ("cliente", "María López", "maria@gmail.com", "7654321"),
+    opcion = input("Seleccione una opción: ")
 
-    # CLIENTES INVÁLIDOS
-    ("cliente", "", "correo_malo", "111"),
-    ("cliente", "Carlos", "carlosgmail.com", "999"),
+    # =================================================
+    # REGISTRAR CLIENTE
+    # =================================================
 
-    # SERVICIOS CORRECTOS
-    ("sala", 4),
-    ("equipo", 3),
-    ("asesoria", 2),
+    if opcion == "1":
 
-    # SERVICIOS INCORRECTOS
-    ("sala", -5),
-    ("equipo", 0),
-    ("asesoria", -1)
-]
+        try:
 
-
-# =========================================================
-# EJECUCIÓN DE OPERACIONES
-# =========================================================
-
-for operacion in operaciones:
-
-    try:
-
-        # =================================================
-        # REGISTRO DE CLIENTES
-        # =================================================
-
-        if operacion[0] == "cliente":
+            nombre = input("Nombre: ")
+            correo = input("Correo: ")
+            telefono = input("Teléfono: ")
 
             cliente = Cliente(
-                operacion[1],
-                operacion[2],
-                operacion[3]
+                nombre,
+                correo,
+                telefono
             )
 
             clientes.append(cliente)
 
+            print("Cliente registrado")
+
+            Logger.registrar(
+                f"Cliente agregado: {nombre}"
+            )
+
+        except Exception as e:
+
+            print("ERROR:", e)
+
+            Logger.registrar(str(e))
+
+    # =================================================
+    # CREAR RESERVA
+    # =================================================
+
+    elif opcion == "2":
+
+        try:
+
+            if len(clientes) == 0:
+
+                raise ReservaError(
+                    "No hay clientes registrados"
+                )
+
+            print("\nCLIENTES:")
+
+            for i, c in enumerate(clientes):
+
+                print(
+                    i,
+                    "-",
+                    c.get_nombre()
+                )
+
+            indice = int(
+                input("Seleccione cliente: ")
+            )
+
+            cliente = clientes[indice]
+
+            print("\nSERVICIOS")
+            print("1. Reserva Sala")
+            print("2. Alquiler Equipo")
+            print("3. Asesoría")
+
+            tipo = input(
+                "Seleccione servicio: "
+            )
+
+            # =========================================
+            # SALA
+            # =========================================
+
+            if tipo == "1":
+
+                horas = int(
+                    input("Horas: ")
+                )
+
+                servicio = ReservaSala(horas)
+
+            # =========================================
+            # EQUIPO
+            # =========================================
+
+            elif tipo == "2":
+
+                dias = int(
+                    input("Días: ")
+                )
+
+                servicio = AlquilerEquipo(dias)
+
+            # =========================================
+            # ASESORÍA
+            # =========================================
+
+            elif tipo == "3":
+
+                sesiones = int(
+                    input("Sesiones: ")
+                )
+
+                servicio = AsesoriaEspecializada(
+                    sesiones
+                )
+
+            else:
+
+                raise ServicioError(
+                    "Servicio inválido"
+                )
+
+            reserva = Reserva(
+                cliente,
+                servicio
+            )
+
+            costo = reserva.confirmar()
+
+            reservas.append(reserva)
+
             print(
-                "CLIENTE REGISTRADO:",
-                cliente.mostrar_info()
+                f"Reserva creada. "
+                f"Costo: ${costo}"
             )
 
             Logger.registrar(
-                f"Cliente registrado: "
-                f"{cliente.get_nombre()}"
+                "Reserva creada correctamente"
             )
 
-        # =================================================
-        # RESERVA DE SALAS
-        # =================================================
+        except Exception as e:
 
-        elif operacion[0] == "sala":
+            print("ERROR:", e)
 
-            servicio = ReservaSala(
-                operacion[1]
-            )
+            Logger.registrar(str(e))
 
-            reserva = Reserva(
-                clientes[0],
-                servicio,
-                operacion[1]
-            )
+    # =================================================
+    # VER CLIENTES
+    # =================================================
 
-            costo = reserva.confirmar()
+    elif opcion == "3":
 
-            reservas.append(reserva)
+        print("\nCLIENTES:\n")
 
-            print(
-                f"RESERVA DE SALA EXITOSA | "
-                f"Costo: ${costo}"
-            )
+        for cliente in clientes:
 
-        # =================================================
-        # ALQUILER DE EQUIPOS
-        # =================================================
+            print(cliente.mostrar_info())
 
-        elif operacion[0] == "equipo":
+    # =================================================
+    # VER RESERVAS
+    # =================================================
 
-            servicio = AlquilerEquipo(
-                operacion[1]
-            )
+    elif opcion == "4":
 
-            reserva = Reserva(
-                clientes[0],
-                servicio,
-                operacion[1]
-            )
+        print("\nRESERVAS:\n")
 
-            costo = reserva.confirmar()
+        for reserva in reservas:
 
-            reservas.append(reserva)
+            print(reserva.mostrar_info())
 
-            print(
-                f"ALQUILER EXITOSO | "
-                f"Costo: ${costo}"
-            )
+    # =================================================
+    # SALIR
+    # =================================================
 
-        # =================================================
-        # ASESORÍAS
-        # =================================================
+    elif opcion == "5":
 
-        elif operacion[0] == "asesoria":
+        print("Saliendo del sistema...")
 
-            servicio = AsesoriaEspecializada(
-                operacion[1]
-            )
+        break
 
-            reserva = Reserva(
-                clientes[0],
-                servicio,
-                operacion[1]
-            )
+    else:
 
-            costo = reserva.confirmar()
-
-            reservas.append(reserva)
-
-            print(
-                f"ASESORÍA EXITOSA | "
-                f"Costo: ${costo}"
-            )
-
-    # =====================================================
-    # MANEJO GENERAL DE ERRORES
-    # =====================================================
-
-    except Exception as error:
-
-        print(
-            "ERROR CONTROLADO:",
-            error
-        )
-
-        Logger.registrar(
-            f"ERROR GENERAL: {error}"
-        )
-
-
-# =========================================================
-# MOSTRAR RESULTADOS FINALES
-# =========================================================
-
-print("\n===================================")
-print("RESUMEN FINAL")
-print("===================================\n")
-
-print("CLIENTES REGISTRADOS:\n")
-
-for cliente in clientes:
-
-    print(cliente.mostrar_info())
-
-print("\nRESERVAS REALIZADAS:\n")
-
-for reserva in reservas:
-
-    print(reserva.mostrar_info())
-
-
-print("\n===================================")
-print("SISTEMA FINALIZADO CORRECTAMENTE")
-print("===================================\n")
+        print("Opción inválida")
